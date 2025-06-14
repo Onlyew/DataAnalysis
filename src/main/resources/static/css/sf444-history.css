@@ -1,0 +1,80 @@
+/**
+ * SF444历史数据查看页面的样式
+ */
+
+/* 页面整体样式 */
+body {
+    background-color: #f8f9fa;
+}
+
+/* 状态卡片样式 */
+.status-info {
+    font-size: 0.95rem;
+}
+
+.status-info p {
+    margin-bottom: 0.5rem;
+}
+
+/* 表格样式优化 */
+.table-responsive {
+    max-height: calc(100vh - 300px);
+    overflow-y: auto;
+}
+
+#historyTable th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* 特定记录样式 */
+.table-danger {
+    background-color: #ffdddd !important;
+}
+
+.table-success {
+    background-color: #ddffdd !important;
+}
+
+/* 分页样式 */
+.pagination-container {
+    overflow-x: auto;
+    padding: 0.5rem 0;
+}
+
+.pagination {
+    flex-wrap: nowrap;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .table-responsive {
+        max-height: calc(100vh - 250px);
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+    }
+    
+    .status-info {
+        font-size: 0.85rem;
+    }
+}
+
+/* 加载状态样式 */
+#loading {
+    height: 200px;
+}
+
+/* 数据高亮 */
+td:nth-child(7) { /* final_result 列 */
+    font-weight: bold;
+}
+
+/* 鼠标悬停行效果 */
+#historyTable tbody tr:hover {
+    box-shadow: 0 0 8px rgba(0,0,0,0.2);
+    transform: translateY(-1px);
+    transition: all 0.2s;
+}

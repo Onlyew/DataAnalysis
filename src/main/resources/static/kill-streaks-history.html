@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>历史连杀记录</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- 自定义样式 -->
+    <style>
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background-color: #f5f8fa;
+            color: #333;
+            padding-top: 20px;
+            padding-bottom: 40px;
+        }
+        
+        .container {
+            max-width: 1200px;
+        }
+        
+        .page-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .page-title {
+            color: #1a73e8;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        .page-title i {
+            margin-right: 10px;
+            color: #1a73e8;
+        }
+        
+        .badge-counter {
+            background-color: #1a73e8;
+            color: white;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            padding: 5px 10px;
+            border-radius: 50px;
+        }
+        
+        .chart-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .chart-title {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #444;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chart-title i {
+            margin-right: 8px;
+            color: #1a73e8;
+        }
+        
+        .chart-body {
+            padding: 20px;
+        }
+        
+        #kill-streaks-history {
+            width: 100%;
+            table-layout: fixed;
+        }
+        
+        #kill-streaks-history th,
+        #kill-streaks-history td {
+            text-align: center;
+            padding: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        #kill-streaks-history th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        #kill-streaks-history th:nth-child(1) {
+            width: 5%;
+        }
+        
+        #kill-streaks-history th:nth-child(2) {
+            width: 15%;
+        }
+        
+        #kill-streaks-history th:nth-child(3) {
+            width: 50%;
+        }
+        
+        #kill-streaks-history th:nth-child(4) {
+            width: 30%;
+        }
+        
+        .highlight {
+            font-weight: bold;
+        }
+        
+        .text-danger {
+            color: #dc3545 !important;
+        }
+        
+        .text-warning {
+            color: #ffc107 !important;
+        }
+        
+        .text-primary {
+            color: #1a73e8 !important;
+        }
+        
+        .filter-control {
+            width: auto;
+            min-width: 130px;
+        }
+        
+        .navbar {
+            background-color: #1a73e8;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-brand {
+            color: white;
+            font-weight: 600;
+        }
+        
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .navbar-nav .nav-link:hover,
+        .navbar-nav .nav-link:focus {
+            color: white;
+        }
+        
+        .navbar-nav .active .nav-link {
+            color: white;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="cashflow-dashboard.html">
+                <i class="fas fa-chart-line"></i> 数据分析系统
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="cashflow-dashboard.html">仪表盘</a>
+                    </li>
+                    <li class="nav-item active">
+                        <a class="nav-link" href="kill-streaks-history.html">连杀记录</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="server-stats.html">服务器状态</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h3 class="page-title">
+                <i class="fas fa-fire"></i> 历史连杀记录
+                <span class="badge badge-counter" id="kill-streaks-count">0</span>
+            </h3>
+        </div>
+        
+        <!-- 连杀记录卡片 -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h5 class="chart-title">
+                            <i class="fas fa-history"></i> 历史连杀记录 (至少5连杀及以上)
+                        </h5>
+                        <div class="chart-actions">
+                            <select id="min-streak-filter" class="form-control form-control-sm filter-control">
+                                <option value="5" selected>5连杀及以上</option>
+                                <option value="6">6连杀及以上</option>
+                                <option value="7">7连杀及以上</option>
+                                <option value="8">8连杀及以上</option>
+                                <option value="9">9连杀及以上</option>
+                                <option value="10">10连杀及以上</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" id="kill-streaks-history">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>连杀次数</th>
+                                        <th>期数区间</th>
+                                        <th>距离现在</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="4" class="text-center">正在加载数据...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript 库 -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            console.log('页面初始化开始...');
+            
+            // 初始加载连杀历史记录
+            fetchKillStreaksHistory(5);
+            
+            // 绑定连杀记录过滤事件
+            $("#min-streak-filter").change(function() {
+                var minStreak = $(this).val();
+                fetchKillStreaksHistory(minStreak);
+            });
+            
+            // 更新最后更新时间
+            updateLastUpdateTime();
+        });
+        
+        // 获取所有至少5连杀及以上的历史记录
+        function fetchKillStreaksHistory(minStreak = 5) {
+            console.log('开始获取历史连杀记录...(最小连杀数=' + minStreak + ')');
+            $.ajax({
+                url: '/api/sf1/kill-streaks-history',
+                type: 'GET',
+                data: { minStreak: minStreak },
+                dataType: 'json',
+                success: function(data) {
+                    console.log('成功获取历史连杀记录:', data);
+                    // 清空表格
+                    $('#kill-streaks-history tbody').empty();
+                    
+                    if (data && data.streaks && data.streaks.length > 0) {
+                        // 显示记录数量
+                        $('#kill-streaks-count').text(data.count || 0);
+                        
+                        // 按距离现在的期数升序排序(从小到大)
+                        data.streaks.sort(function(a, b) {
+                            return (a.periodDiff || 9999) - (b.periodDiff || 9999);
+                        });
+                        
+                        // 逐条添加记录
+                        data.streaks.forEach(function(streak, index) {
+                            var row = '<tr>';
+                            row += '<td class="text-center">' + (index + 1) + '</td>';
+                            row += '<td class="text-center font-weight-bold">' + streak.streakCount + '</td>';
+                            row += '<td class="text-center">' + streak.startPeriod + ' 至 ' + streak.endPeriod + '</td>';
+                            
+                            // 距离显示
+                            if (streak.periodDiff !== undefined) {
+                                var diffClass = '';
+                                // 根据距离设置不同的样式
+                                if (streak.periodDiff < 50) diffClass = 'text-danger font-weight-bold';
+                                else if (streak.periodDiff < 100) diffClass = 'text-warning font-weight-bold';
+                                else if (streak.periodDiff < 200) diffClass = 'text-primary font-weight-bold';
+                                else diffClass = 'text-secondary';
+                                
+                                row += '<td class="text-center ' + diffClass + '">' + streak.periodDiff + ' 期</td>';
+                            } else {
+                                row += '<td class="text-center">--</td>';
+                            }
+                            
+                            row += '</tr>';
+                            $('#kill-streaks-history tbody').append(row);
+                        });
+                    } else {
+                        // 没有记录
+                        $('#kill-streaks-count').text('0');
+                        $('#kill-streaks-history tbody').html(
+                            '<tr><td colspan="4" class="text-center">没有找到符合条件的连杀记录</td></tr>'
+                        );
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('获取历史连杀记录失败:', error);
+                    $('#kill-streaks-history tbody').html(
+                        '<tr><td colspan="4" class="text-center">获取数据失败，请稍后再试</td></tr>'
+                    );
+                }
+            });
+        }
+        
+        // 更新最后更新时间
+        function updateLastUpdateTime() {
+            var now = new Date();
+            var timeString = now.getFullYear() + '-' + 
+                           padZero(now.getMonth() + 1) + '-' + 
+                           padZero(now.getDate()) + ' ' + 
+                           padZero(now.getHours()) + ':' + 
+                           padZero(now.getMinutes()) + ':' + 
+                           padZero(now.getSeconds());
+            document.title = '历史连杀记录 - ' + timeString;
+        }
+        
+        // 数字补零
+        function padZero(num) {
+            return (num < 10 ? '0' : '') + num;
+        }
+    </script>
+</body>
+</html>

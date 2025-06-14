@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>服务器统计数据</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; color: #333; }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 20px; }
+        .stats-container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .timestamp { text-align: center; margin-bottom: 20px; color: #7f8c8d; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background-color: #3498db; color: white; padding: 10px; text-align: center; }
+        td { padding: 10px; text-align: center; border-bottom: 1px solid #ddd; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        tr:hover { background-color: #e3f2fd; }
+        .refresh-controls { display: flex; flex-direction: column; align-items: center; margin: 15px 0; }
+        .refresh-btn { width: 150px; margin: 10px 0; padding: 10px; background-color: #2ecc71; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .refresh-btn:hover { background-color: #27ae60; }
+        .auto-refresh-panel { display: flex; align-items: center; justify-content: center; margin: 10px 0; gap: 10px; background-color: #f8f9fa; padding: 8px 15px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        #refreshInterval { padding: 5px 10px; border: 1px solid #ddd; border-radius: 4px; background-color: white; }
+        #nextRefresh { font-size: 14px; color: #7f8c8d; min-width: 150px; }
+        .server-name { font-weight: bold; }
+        .positive { color: #27ae60; }
+        .negative { color: #e74c3c; }
+        .highlight { font-weight: bold; }
+    </style>
+    <script>
+        let refreshTimer;
+        let secondsLeft = 30;
+        
+        // 页面加载时启动定时器
+        window.onload = function() {
+            // 检查URL参数中是否包含自定义刷新间隔
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlInterval = urlParams.get('refresh');
+            
+            if (urlInterval) {
+                // 如果有URL参数，使用URL中的刷新时间
+                document.getElementById('refreshInterval').value = urlInterval;
+            }
+            
+            const interval = document.getElementById('refreshInterval').value;
+            if (interval > 0) {
+                startRefreshTimer(interval);
+                console.log('开始刷新计时: ' + interval + '秒');
+            }
+        };
+        
+        // 设置刷新间隔
+        function setRefreshInterval(seconds) {
+            // 清除当前定时器
+            clearInterval(refreshTimer);
+            
+            // 更新URL参数，保存用户的选择
+            const url = new URL(window.location.href);
+            url.searchParams.set('refresh', seconds);
+            window.history.replaceState({}, '', url.toString());
+            
+            console.log('设置刷新间隔为: ' + seconds + '秒');
+            
+            if (seconds > 0) {
+                startRefreshTimer(seconds);
+            } else {
+                document.getElementById('nextRefresh').textContent = '自动刷新已关闭';
+            }
+        }
+        
+        // 启动刷新定时器
+        function startRefreshTimer(seconds) {
+            secondsLeft = parseInt(seconds);
+            updateRefreshDisplay();
+            
+            refreshTimer = setInterval(function() {
+                secondsLeft--;
+                if (secondsLeft <= 0) {
+                    // 时间到，刷新页面
+                    location.reload();
+                } else {
+                    updateRefreshDisplay();
+                }
+            }, 1000);
+        }
+        
+        // 更新刷新显示
+        function updateRefreshDisplay() {
+            const display = document.getElementById('nextRefresh');
+            if (secondsLeft > 60) {
+                const minutes = Math.floor(secondsLeft / 60);
+                const seconds = secondsLeft % 60;
+                display.textContent = '下次刷新: ' + minutes + '分' + (seconds > 0 ? seconds + '秒' : '') + '后';
+            } else {
+                display.textContent = '下次刷新: ' + secondsLeft + '秒后';
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="stats-container">
+        <h1>服务器统计数据汇总</h1>
+        <div class="timestamp">最后更新时间: 2025-06-12 22:22:45</div>
+        <div class="refresh-controls">
+            <button class="refresh-btn" onclick="location.reload()">立即刷新</button>
+            <div class="auto-refresh-panel">
+                <span>自动刷新: </span>
+                <select id="refreshInterval" onchange="setRefreshInterval(this.value)">
+                    <option value="0">关闭</option>
+                    <option value="10">10秒</option>
+                    <option value="30" selected>30秒</option>
+                    <option value="60">1分钟</option>
+                    <option value="300">5分钟</option>
+                </select>
+                <span id="nextRefresh">下次刷新: 30秒后</span>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>服务器</th>
+                    <th>总数/正确</th>
+                    <th>预测胜率</th>
+                    <th>实际胜率</th>
+                    <th>最近100期</th>
+                    <th>被杀率</th>
+                    <th>连中/连错</th>
+                    <th>连盈/连亏</th>
+                    <th>单率</th>
+                    <th>双率</th>
+                    <th>最高连中</th>
+                    <th>最高连错</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="server-name">SF1</td>
+                    <td>14887/7382</td>
+                    <td class="negative">49.59%</td>
+                    <td>27.02%</td>
+                    <td class="negative">43.00%</td>
+                    <td>44.71%</td>
+                    <td>1/0</td>
+                    <td>6/0</td>
+                    <td>49.59%</td>
+                    <td>50.28%</td>
+                    <td>16</td>
+                    <td>14</td>
+                </tr>
+                <tr>
+                    <td class="server-name">SF3</td>
+                    <td>12250/6196</td>
+                    <td class="positive highlight">50.58%</td>
+                    <td>28.05%</td>
+                    <td class="positive highlight">50.00%</td>
+                    <td>45.02%</td>
+                    <td>0/1</td>
+                    <td>2/0</td>
+                    <td>48.16%</td>
+                    <td>48.42%</td>
+                    <td>18</td>
+                    <td>17</td>
+                </tr>
+                <tr>
+                    <td class="server-name">SF444</td>
+                    <td>14726/7309</td>
+                    <td class="negative">49.63%</td>
+                    <td>27.05%</td>
+                    <td class="positive highlight">51.00%</td>
+                    <td>44.68%</td>
+                    <td>0/1</td>
+                    <td>2/0</td>
+                    <td>49.62%</td>
+                    <td>50.25%</td>
+                    <td>16</td>
+                    <td>14</td>
+                </tr>
+                <tr>
+                    <td class="server-name">SF4</td>
+                    <td>7437/3762</td>
+                    <td class="positive highlight">50.58%</td>
+                    <td>28.44%</td>
+                    <td class="negative">47.00%</td>
+                    <td>44.60%</td>
+                    <td>4/0</td>
+                    <td>2/0</td>
+                    <td>50.05%</td>
+                    <td>49.85%</td>
+                    <td>13</td>
+                    <td>10</td>
+                </tr>
+                <tr>
+                    <td class="server-name">SF5</td>
+                    <td>12351/6211</td>
+                    <td class="positive highlight">50.29%</td>
+                    <td>27.81%</td>
+                    <td class="positive highlight">53.00%</td>
+                    <td>45.01%</td>
+                    <td>0/2</td>
+                    <td>2/0</td>
+                    <td>49.87%</td>
+                    <td>50.03%</td>
+                    <td>15</td>
+                    <td>14</td>
+                </tr>
+                <tr>
+                    <td class="server-name">SF6</td>
+                    <td>12250/6159</td>
+                    <td class="positive highlight">50.28%</td>
+                    <td>27.87%</td>
+                    <td class="negative">44.00%</td>
+                    <td>45.02%</td>
+                    <td>1/0</td>
+                    <td>2/0</td>
+                    <td>49.93%</td>
+                    <td>49.98%</td>
+                    <td>11</td>
+                    <td>13</td>
+                </tr>
+                <tr>
+                    <td class="server-name">SF7</td>
+                    <td>12351/6236</td>
+                    <td class="positive highlight">50.49%</td>
+                    <td>28.10%</td>
+                    <td class="positive highlight">51.00%</td>
+                    <td>45.01%</td>
+                    <td>0/3</td>
+                    <td>2/0</td>
+                    <td>49.87%</td>
+                    <td>50.03%</td>
+                    <td>12</td>
+                    <td>13</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
